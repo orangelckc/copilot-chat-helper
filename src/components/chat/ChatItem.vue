@@ -32,11 +32,11 @@ const preprocessMarkdown = computed(() => {
 <template>
   <div class="chat-item">
     <div class="question">
-      <div class="label">🤔 问题：</div>
+      <div class="label">🤔 {{ $t('chat.question') }}: </div>
       <div class="content">{{ chat.question }}</div>
     </div>
     <div class="answer">
-      <div class="label">🤖 回答：</div>
+      <div class="label">🤖 {{ $t('chat.answer') }}: </div>
       <div class="content markdown">
         <VueMarkdown :source="preprocessMarkdown" :options="markdownOptions" />
       </div>

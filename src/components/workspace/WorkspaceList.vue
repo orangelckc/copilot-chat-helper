@@ -19,15 +19,20 @@ defineEmits<{
   <div class="workspace-panel">
     <div class="button-group">
       <button class="action-btn find-btn" :disabled="loading" @click="$emit('find')">
-        <span class="icon">🔍</span> 查找工作区
+        <span class="icon">🔍</span> {{ $t('workspace.find') }}
       </button>
-      <button class="action-btn refresh-btn" :disabled="loading" @click="$emit('refresh')" title="强制刷新缓存">
+      <button class="action-btn refresh-btn" :disabled="loading" @click="$emit('refresh')"
+        :title="$t('workspace.refresh')">
         <span class="icon">🔄</span>
       </button>
     </div>
     <div class="workspace-list">
-      <WorkspaceItem v-for="workspace in workspaces" :key="workspace.name" :name="workspace.name"
-        :is-active="selectedWorkspace === workspace.name" @click="$emit('select', workspace.name)" />
+      <div v-if="loading" class="status-tip">{{ $t('workspace.loading') }}</div>
+      <template v-else-if="workspaces.length">
+        <WorkspaceItem v-for="workspace in workspaces" :key="workspace.name" :name="workspace.name"
+          :is-active="selectedWorkspace === workspace.name" @click="$emit('select', workspace.name)" />
+      </template>
+      <div v-else class="status-tip">{{ $t('workspace.empty') }}</div>
     </div>
   </div>
 </template>
@@ -74,6 +79,7 @@ defineEmits<{
 .refresh-btn {
   aspect-ratio: 1;
   border: none;
+  padding: 6px;
 }
 
 .action-btn:hover:not(:disabled) {

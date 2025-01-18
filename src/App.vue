@@ -7,6 +7,9 @@ import { invoke } from '@tauri-apps/api/core'
 import { type Workspace, type Chat, type WorkspaceCache } from './types'
 import WorkspaceList from './components/workspace/WorkspaceList.vue'
 import ChatList from './components/chat/ChatList.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const WORKSPACE_STORAGE_PATH = 'Code/User/workspaceStorage'
 const CACHE_KEY = 'workspace-cache'
@@ -99,7 +102,7 @@ async function handleGetWorkspaces() {
 
     const workspaceExist = await exists(WORKSPACE_STORAGE_PATH, { baseDir: BaseDirectory.Data })
     if (!workspaceExist) {
-      throw new Error('当前系统没找到VSCode工作区目录')
+      throw new Error(t('workspace.empty'))
     }
 
     // 获取所有工作区
@@ -111,7 +114,7 @@ async function handleGetWorkspaces() {
     // 批量读取工作区内容
     await batchReadWorkspaces(allWorkspaces)
   } catch (error) {
-    await message(`获取工作区列表失败：${error}`)
+    await message(t('dialog.getWorkspaceListFail', { error }))
   } finally {
     loading.value = false
   }
@@ -152,7 +155,7 @@ async function handleExport() {
 
     // 打开系统的文件夹选择对话框
     const folderPath = await open({
-      title: '选择导出目录',
+      title: t('dialog.exportTitle'),
       directory: true,
       multiple: false,
       defaultPath: '~',
@@ -163,7 +166,7 @@ async function handleExport() {
 
     // 生成导出内容，添加表情符号
     const exportContent = chatContent.value.map((chat, index) => {
-      return `## 💬 对话 ${index + 1}\n\n### 🤔 问题\n${chat.question}\n\n### 🤖 回答\n${chat.answer}\n\n---\n`
+      return `## 💬 ${t('chat.dialog')} ${index + 1}\n\n### 🤔 ${t('chat.question')}\n${chat.question}\n\n### 🤖 ${t('chat.answer')}\n${chat.answer}\n\n---\n`
     }).join('\n')
 
     // 生成文件名
@@ -174,12 +177,12 @@ async function handleExport() {
     await writeTextFile(filePath, exportContent)
 
     // 显示成功提示
-    await message('导出成功', {
-      okLabel: '关闭',
+    await message(t('dialog.exportSuccess'), {
+      okLabel: t('dialog.close'),
     })
   }
   catch (error) {
-    await message(`❌ 导出失败：${error}`)
+    await message(`❌ ${t('dialog.exportFail', { error })}`)
   }
   finally {
     exporting.value = false
@@ -214,9 +217,9 @@ async function handleRefresh() {
       chatContent.value = workspaceCache.value[selectedWorkspace.value]?.chats || []
     }
 
-    await message('✨ 刷新成功')
+    await message(`✨ ${t('dialog.refreshSuccess')}}`)
   } catch (error) {
-    await message(`❌ 刷新失败：${error}`)
+    await message(`❌ ${t('dialog.refreshFail', { error })}`)
   } finally {
     loading.value = false
   }
