@@ -1,16 +1,89 @@
-# Tauri + Vue + TypeScript
+# Copilot Chat Exporter
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A desktop application for exporting GitHub Copilot Chat history.
 
-## Recommended IDE Setup
+[中文文档](./README.zh.md)
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Features
 
-## Type Support For `.vue` Imports in TS
+- 🔍 Automatically scan and read Copilot Chat records from VS Code workspaces
+- 💾 Export to Markdown format
+- 🔄 Smart caching mechanism for improved loading speed
+- 🌍 Support for English and Chinese interfaces
+- 🎨 Beautiful UI design
+- 📱 Responsive design for different screen sizes
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+## Tech Stack
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+- Frontend: Vue 3 + TypeScript
+- Desktop Framework: Tauri
+- UI Components: Custom components
+- Internationalization: Vue I18n
+- Markdown Rendering: vue-markdown-render
+- Code Highlighting: highlight.js
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+## Prerequisites
+
+- Node.js >= 16
+- Rust >= 1.70
+- pnpm >= 8.0
+
+## Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run in development mode
+pnpm tauri dev
+
+# Build application
+pnpm tauri build
+```
+
+## Project Structure
+
+```
+src/
+├── components/         # Components directory
+│   ├── workspace/     # Workspace-related components
+│   └── chat/         # Chat-related components
+├── i18n/             # Internationalization config
+├── types/            # TypeScript type definitions
+├── App.vue          # Main application component
+└── main.ts         # Application entry point
+```
+
+## Core Features
+
+1. Workspace Management
+   - Auto-scan VS Code workspaces
+   - Filter empty workspaces
+   - Support manual refresh
+
+2. Chat History
+   - Auto-load chat history
+   - Markdown format support
+   - Code block syntax highlighting
+
+3. Caching Mechanism
+   - localStorage caching
+   - 24-hour cache expiration
+   - Force refresh support
+
+4. Export Functionality
+   - Markdown format export
+   - Custom export directory
+   - Preserve original formatting
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+[MIT](LICENSE)
