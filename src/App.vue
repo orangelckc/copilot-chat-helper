@@ -3,5 +3,5 @@ import ExportPage from './ExportPage.vue'
 </script>
 
 <template>
- <ExportPage /> 
+  <ExportPage />
 </template>

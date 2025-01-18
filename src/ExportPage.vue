@@ -1,18 +1,10 @@
-<template>
-  <div class="export-container">
-    <button :disabled="exporting" @click="handleExport">
-      导出Copilot聊天记录
-    </button>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { message, open } from '@tauri-apps/plugin-dialog'
 import { ref } from 'vue'
 
 const exporting = ref(false)
 
-const handleExport = async () => {
+async function handleExport() {
   try {
     exporting.value = true
     // 打开系统的文件夹选择对话框
@@ -21,21 +13,31 @@ const handleExport = async () => {
       directory: true,
       multiple: false,
       defaultPath: '~',
-      canCreateDirectories: true
+      canCreateDirectories: true,
     })
 
     if (folderPath) {
       // TODO: 调用后端导出功能
-      await message('选择目录成功：' + folderPath)
+      await message(`选择目录成功：${folderPath}`)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(error)
-    await message('导出失败：' + error)
-  } finally {
+    await message(`导出失败：${error}`)
+  }
+  finally {
     exporting.value = false
   }
 }
 </script>
+
+<template>
+  <div class="export-container">
+    <button :disabled="exporting" @click="handleExport">
+      导出Copilot聊天记录
+    </button>
+  </div>
+</template>
 
 <style scoped land="scss">
 .export-container {

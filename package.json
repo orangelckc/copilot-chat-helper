@@ -1,13 +1,15 @@
 {
   "name": "copilot-challenge",
-  "private": true,
-  "version": "0.1.0",
   "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint": "eslint . --fix"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -16,11 +18,13 @@
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.14.0",
     "@tauri-apps/cli": "^2",
+    "@types/node": "^22.10.7",
     "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^9.18.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
     "vue-tsc": "^2.1.10"
-  },
-  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a"
+  }
 }
