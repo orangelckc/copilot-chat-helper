@@ -1,5 +1,5 @@
 [package]
-name = "copilot-challenge"
+name = "copilot-chat-helper"
 version = "0.1.0"
 description = "A Tauri App"
 authors = [ "you" ]
@@ -28,4 +28,4 @@ serde_json = "1"
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2.0.0"
 tauri-plugin-fs = "2"
-rusqlite = "0.32.1"
+rusqlite = { version = "0.32.1", features = ["bundled"] }

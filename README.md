@@ -1,4 +1,4 @@
-# Copilot Chat Exporter
+# Copilot Chat Helper
 
 A desktop application for exporting GitHub Copilot Chat history.
 
