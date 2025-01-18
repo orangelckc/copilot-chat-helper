@@ -8,6 +8,9 @@
     "opener:default",
     "dialog:default",
     "dialog:allow-message",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "sql:default",
+    "sql:allow-load",
+    "sql:allow-execute"
   ]
 }

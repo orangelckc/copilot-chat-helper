@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { message, open } from '@tauri-apps/plugin-dialog'
+import { invoke } from '@tauri-apps/api/core'
+import { confirm, message, open } from '@tauri-apps/plugin-dialog'
+import { openPath } from '@tauri-apps/plugin-opener'
 import { ref } from 'vue'
 
 const exporting = ref(false)
@@ -7,6 +9,13 @@ const exporting = ref(false)
 async function handleExport() {
   try {
     exporting.value = true
+
+    const isValid = await invoke<boolean>('check_workspace_storage_path')
+
+    if (!isValid) {
+      throw new Error('当前系统没找到VSCode工作区目录')
+    }
+
     // 打开系统的文件夹选择对话框
     const folderPath = await open({
       title: '选择导出目录',
@@ -16,13 +25,29 @@ async function handleExport() {
       canCreateDirectories: true,
     })
 
+    // 执行导出操作
     if (folderPath) {
-      // TODO: 调用后端导出功能
-      await message(`选择目录成功：${folderPath}`)
+      const success = await invoke<boolean>('export_chat_records', {
+        path: folderPath,
+      })
+
+      if (success) {
+        const confirmed = await confirm('导出成功', {
+          okLabel: '打开文件夹',
+          cancelLabel: '关闭',
+        })
+
+        if (confirmed) {
+          // 打开导出的文件夹
+          openPath(folderPath)
+        }
+      }
+      else {
+        await message('导出失败')
+      }
     }
   }
   catch (error) {
-    console.error(error)
     await message(`导出失败：${error}`)
   }
   finally {
