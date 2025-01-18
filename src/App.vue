@@ -1,19 +1,150 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { dataDir, join } from '@tauri-apps/api/path'
 import { message, open } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory, exists, readDir, writeTextFile } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core'
-import { type Workspace, type Chat } from './types'
+import { type Workspace, type Chat, type WorkspaceCache } from './types'
 import WorkspaceList from './components/workspace/WorkspaceList.vue'
 import ChatList from './components/chat/ChatList.vue'
 
 const WORKSPACE_STORAGE_PATH = 'Code/User/workspaceStorage'
+const CACHE_KEY = 'workspace-cache'
+const CACHE_EXPIRE_TIME = 24 * 60 * 60 * 1000 // 24小时
+
 const workspaceList = ref<Workspace[]>([])
 const selectedWorkspace = ref<string>('')
 const chatContent = ref<Chat[]>([])
 const loading = ref(false)
 const exporting = ref(false)
+const workspaceCache = ref<WorkspaceCache>({})
+
+// 只显示有聊天记录的工作区
+const validWorkspaces = computed(() =>
+  workspaceList.value.filter(ws => workspaceCache.value[ws.name]?.chats.length > 0)
+)
+
+// 从 localStorage 加载缓存
+function loadCache() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      workspaceCache.value = JSON.parse(cached)
+    }
+  } catch (error) {
+    console.error('Failed to load cache:', error)
+  }
+}
+
+// 保存缓存到 localStorage
+function saveCache() {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(workspaceCache.value))
+  } catch (error) {
+    console.error('Failed to save cache:', error)
+  }
+}
+
+// 检查缓存是否过期
+function isCacheExpired(lastUpdated: number) {
+  return Date.now() - lastUpdated > CACHE_EXPIRE_TIME
+}
+
+// 读取单个工作区的内容
+async function readWorkspaceContent(workspaceName: string): Promise<Chat[]> {
+  try {
+    const dbPath = await join(await dataDir(), WORKSPACE_STORAGE_PATH, workspaceName, 'state.vscdb')
+    const content = await invoke<string>('read_workspace', { path: dbPath })
+    const parsedContent = JSON.parse(content)
+    return Array.isArray(parsedContent) ? parsedContent : []
+  } catch (error) {
+    console.error(`Failed to read workspace ${workspaceName}:`, error)
+    return []
+  }
+}
+
+// 批量读取工作区内容
+async function batchReadWorkspaces(workspaces: Workspace[]) {
+  loading.value = true
+  try {
+    const now = Date.now()
+    const promises = workspaces.map(async (ws) => {
+      // 检查缓存
+      const cached = workspaceCache.value[ws.name]
+      if (cached && !isCacheExpired(cached.lastUpdated)) {
+        return
+      }
+
+      // 读取新内容
+      const chats = await readWorkspaceContent(ws.name)
+      workspaceCache.value[ws.name] = {
+        chats,
+        lastUpdated: now
+      }
+    })
+
+    await Promise.all(promises)
+    saveCache()
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleGetWorkspaces() {
+  try {
+    loading.value = true
+
+    // 加载缓存
+    loadCache()
+
+    const workspaceExist = await exists(WORKSPACE_STORAGE_PATH, { baseDir: BaseDirectory.Data })
+    if (!workspaceExist) {
+      throw new Error('当前系统没找到VSCode工作区目录')
+    }
+
+    // 获取所有工作区
+    const allWorkspaces = (await readDir(WORKSPACE_STORAGE_PATH, { baseDir: BaseDirectory.Data }))
+      .filter(item => item.isDirectory)
+
+    workspaceList.value = allWorkspaces
+
+    // 批量读取工作区内容
+    await batchReadWorkspaces(allWorkspaces)
+  } catch (error) {
+    await message(`获取工作区列表失败：${error}`)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleSelectWorkspace(workspaceName: string) {
+  selectedWorkspace.value = workspaceName
+  const cached = workspaceCache.value[workspaceName]
+
+  if (cached) {
+    chatContent.value = cached.chats
+
+    // 如果缓存过期，在后台更新
+    if (isCacheExpired(cached.lastUpdated)) {
+      const chats = await readWorkspaceContent(workspaceName)
+      workspaceCache.value[workspaceName] = {
+        chats,
+        lastUpdated: Date.now()
+      }
+      chatContent.value = chats
+      saveCache()
+    }
+  } else {
+    // 如果没有缓存，直接读取
+    const chats = await readWorkspaceContent(workspaceName)
+    workspaceCache.value[workspaceName] = {
+      chats,
+      lastUpdated: Date.now()
+    }
+    chatContent.value = chats
+    saveCache()
+  }
+}
 
 async function handleExport() {
   try {
@@ -55,44 +186,38 @@ async function handleExport() {
   }
 }
 
-async function handleGetWorkspaces() {
-  try {
-    const workspaceExist = await exists(WORKSPACE_STORAGE_PATH, { baseDir: BaseDirectory.Data })
-
-    if (!workspaceExist) {
-      throw new Error('当前系统没找到VSCode工作区目录')
-    }
-
-    workspaceList.value = (await readDir(WORKSPACE_STORAGE_PATH, { baseDir: BaseDirectory.Data }))
-      .filter(item => item.isDirectory)
-  }
-  catch (error) {
-    await message(`获取工作区列表失败：${error}`)
-  }
-}
-
-async function handleSelectWorkspace(workspaceName: string) {
+// 强制刷新所有工作区内容
+async function handleRefresh() {
   try {
     loading.value = true
-    selectedWorkspace.value = workspaceName
-    const dbPath = await join(await dataDir(), WORKSPACE_STORAGE_PATH, workspaceName, 'state.vscdb')
-    const content = await invoke<string>('read_workspace', { path: dbPath })
-    console.log(content)
-    // 解析返回的JSON字符串
-    const parsedContent = JSON.parse(content)
-    if (!Array.isArray(parsedContent) || parsedContent.length === 0) {
-      chatContent.value = []
-      await message('当前工作区没有聊天记录')
-      return
+    const now = Date.now()
+
+    // 清空当前工作区的缓存
+    if (selectedWorkspace.value) {
+      delete workspaceCache.value[selectedWorkspace.value]
     }
 
-    chatContent.value = parsedContent
-  }
-  catch (error) {
-    await message(`读取工作区失败：${error}`)
-    chatContent.value = []
-  }
-  finally {
+    // 重新读取所有工作区内容
+    const promises = workspaceList.value.map(async (ws) => {
+      const chats = await readWorkspaceContent(ws.name)
+      workspaceCache.value[ws.name] = {
+        chats,
+        lastUpdated: now
+      }
+    })
+
+    await Promise.all(promises)
+    saveCache()
+
+    // 如果当前有选中的工作区，更新显示内容
+    if (selectedWorkspace.value) {
+      chatContent.value = workspaceCache.value[selectedWorkspace.value]?.chats || []
+    }
+
+    await message('✨ 刷新成功')
+  } catch (error) {
+    await message(`❌ 刷新失败：${error}`)
+  } finally {
     loading.value = false
   }
 }
@@ -101,8 +226,8 @@ async function handleSelectWorkspace(workspaceName: string) {
 <template>
   <div class="container">
     <div class="export-container">
-      <WorkspaceList :workspaces="workspaceList" :selected-workspace="selectedWorkspace" :loading="loading"
-        @select="handleSelectWorkspace" @find="handleGetWorkspaces" />
+      <WorkspaceList :workspaces="validWorkspaces" :selected-workspace="selectedWorkspace" :loading="loading"
+        @select="handleSelectWorkspace" @find="handleGetWorkspaces" @refresh="handleRefresh" />
       <ChatList :chats="chatContent" :loading="loading" :selected-workspace="selectedWorkspace"
         @export="handleExport" />
     </div>

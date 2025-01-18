@@ -1,20 +1,38 @@
 <script setup lang="ts">
-import ChatItem from './ChatItem.vue'
 import { type Chat } from '@/types'
+import ChatItem from './ChatItem.vue'
+import { ref, watch } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   chats: Chat[]
   loading: boolean
   selectedWorkspace: string
+}>()
+
+const recordArea = ref<HTMLDivElement | null>(null)
+
+// 监听选中的工作区或聊天内容的变化
+watch(
+  [() => props.selectedWorkspace, () => props.chats],
+  () => {
+    // 重置滚动条位置
+    if (recordArea.value) {
+      recordArea.value.scrollTop = 0
+    }
+  }
+)
+
+defineEmits<{
+  'export': []
 }>()
 </script>
 
 <template>
   <div class="export-panel">
     <button class="export-btn" :disabled="loading || !selectedWorkspace" @click="$emit('export')">
-      导出
+      <span class="icon">📤</span> 导出
     </button>
-    <div class="record-area">
+    <div ref="recordArea" class="record-area">
       <template v-if="loading">
         <div class="status-tip">
           <div class="loading-spinner"></div>
@@ -33,8 +51,7 @@ defineProps<{
 
 <style scoped>
 .export-panel {
-  flex: 3;
-  min-width: 400px;
+  flex: 2;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -45,51 +62,36 @@ defineProps<{
 }
 
 .export-btn {
-  background-color: #409eff;
-  color: #ffffff;
-  border: none;
+  background-color: #ffffff;
+  color: #409eff;
+  border: 2px solid #409eff;
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .export-btn:hover:not(:disabled) {
-  background-color: #66b1ff;
-  transform: translateY(-1px);
+  background-color: #409eff;
+  color: #ffffff;
 }
 
 .export-btn:disabled {
-  background-color: #a0cfff;
+  border-color: #a0cfff;
+  color: #a0cfff;
   cursor: not-allowed;
 }
 
 .record-area {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-}
-
-.record-area::-webkit-scrollbar {
-  width: 6px;
-}
-
-.record-area::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.record-area::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.record-area::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+  padding-right: 8px;
 }
 
 .status-tip {
@@ -119,5 +121,24 @@ defineProps<{
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* 自定义滚动条样式 */
+.record-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.record-area::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.record-area::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.record-area::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
 }
 </style>

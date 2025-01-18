@@ -76,7 +76,7 @@ const preprocessMarkdown = computed(() => {
 .content {
   flex: 1;
   line-height: 1.6;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .content.markdown {
