@@ -3,8 +3,9 @@ import { type Chat } from '@/types'
 import VueMarkdown from 'vue-markdown-render'
 import 'highlight.js/styles/github.css'
 import hljs from 'highlight.js'
+import { computed } from 'vue';
 
-defineProps<{
+const props = defineProps<{
   chat: Chat
 }>()
 
@@ -22,18 +23,22 @@ const markdownOptions = {
     return '' // 使用默认的转义
   }
 }
+
+const preprocessMarkdown = computed(() => {
+  return props.chat.answer.replaceAll('\n\n', '\n')
+})
 </script>
 
 <template>
   <div class="chat-item">
     <div class="question">
-      <div class="label">问题：</div>
+      <div class="label">🤔 问题：</div>
       <div class="content">{{ chat.question }}</div>
     </div>
     <div class="answer">
-      <div class="label">回答：</div>
+      <div class="label">🤖 回答：</div>
       <div class="content markdown">
-        <VueMarkdown :source="chat.answer" :options="markdownOptions" />
+        <VueMarkdown :source="preprocessMarkdown" :options="markdownOptions" />
       </div>
     </div>
   </div>
@@ -71,7 +76,6 @@ const markdownOptions = {
 .content {
   flex: 1;
   line-height: 1.6;
-  white-space: pre-wrap;
   word-break: break-all;
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type Chat } from '@/types'
 import ChatItem from './ChatItem.vue'
+import { type Chat } from '@/types'
 
 defineProps<{
   chats: Chat[]
@@ -33,7 +33,7 @@ defineProps<{
 
 <style scoped>
 .export-panel {
-  flex: 2;
+  flex: 3;
   min-width: 400px;
   background-color: #ffffff;
   border-radius: 12px;

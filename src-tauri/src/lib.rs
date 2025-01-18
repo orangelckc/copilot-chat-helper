@@ -4,7 +4,7 @@
 )]
 
 use rusqlite::Connection;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::path::PathBuf;
 
 #[derive(serde::Serialize)]

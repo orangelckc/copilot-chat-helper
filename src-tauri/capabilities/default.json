@@ -12,6 +12,7 @@
     "dialog:allow-message",
     "dialog:allow-open",
     "fs:default",
+    "fs:allow-write-text-file",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$DATA/**" }]
